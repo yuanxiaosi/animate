@@ -1,0 +1,101 @@
+<!DOCTYPE html>  
+<html>  
+ 
+<style>
+  body { margin: 0; }
+  canvas { width: 100%; height: 100% }
+</style>
+<body>  
+  
+    <div id="container"></div>
+
+
+    <script src="./jquery.js"></script>
+    <script src="./three.js"></script>
+    <script src="./Detector.js"></script>
+    <script>
+    // 禁用鼠标选中DOM元素
+    document.onselectstart = function() {
+      return false;
+    }; 
+
+
+
+    // 设置场景大小
+    var WIDTH = 800,
+      HEIGHT = 800;
+    // 设置一些相机参数
+    var VIEW_ANGLE = 45,
+      ASPECT = WIDTH / HEIGHT,
+      NEAR = 0.1,
+      FAR = 10000;
+    // 获取DOM结构中的元素
+    // - 假设我们使用了JQuery
+    var $container = $('#container');
+    // 创建渲染器、相机和场景
+    var renderer = new THREE.WebGLRenderer();
+    var camera =
+      new THREE.PerspectiveCamera(
+        VIEW_ANGLE,
+        ASPECT,
+        NEAR,
+        FAR);
+    var scene = new THREE.Scene();
+    // 将相机加入场景
+    scene.add(camera);
+    // 相机的初始位置为原点
+    // 将相机拉回来一些（译者注：这样才能看到原点）
+    camera.position.z = 300;
+    // 启动渲染器
+    renderer.setSize(WIDTH, HEIGHT);
+    // 将渲染器加到DOM结构中
+    $container.append(renderer.domElement);
+    
+
+    // 创建球体表面的材质
+    var sphereMaterial =
+      new THREE.MeshLambertMaterial(
+        {
+          color: 0xCC0000
+        }
+    );
+
+    // 设置球体参数（译者注：球体被划分为16×16的网格，如果后两个参数取4、2，则生成一个八面体，请想象）
+    var radius = 50,
+        segments = 16,
+        rings = 16;
+    // material覆盖在geometry上，生成mesh
+    var sphere = new THREE.Mesh(
+      new THREE.SphereGeometry(
+        radius,
+        segments,
+        rings),
+      sphereMaterial);
+    // 将mesh加入到场景中
+    scene.add(sphere);
+
+
+    // 创建一个点光源
+    var pointLight =
+      new THREE.PointLight(0xFFFFFF);
+    // 设置点光源的位置
+    pointLight.position.x = 10;
+    pointLight.position.y = 50;
+    pointLight.position.z = 130;
+    // 将点光源加入场景
+    scene.add(pointLight);
+
+
+    var render = function () {
+      requestAnimationFrame( render );
+
+      sphere.rotation.x += 0.1;
+      //sphere.rotation.y += 0.1;
+
+      renderer.render(scene, camera);
+    };
+
+    render();
+    </script>
+</body>  
+</html>  

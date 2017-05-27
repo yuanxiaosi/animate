@@ -1,0 +1,186 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<link rel="stylesheet" href="images/main.css"/>
+<title>无标题文档</title>
+<style>
+body{ background:#333;}
+#cas{ margin-top:50px;}
+#cas table{ border-collapse:collapse; margin:0 auto; background:#fff;}
+#cas table tr td{ width:20px; height:20px; border:1px solid #eee; display:inline-block; box-sizing:border-box;}
+#cas table tr td.on{ background:#39c;}
+#cas table tr td.foot{ background:#093;}
+#btn{ margin:0 auto; display:inline-block; margin-top:30px; margin-left:600px; width:200px; height:50px;}
+#stp{ margin:0 auto; display:inline-block; margin-top:30px; width:200px; height:50px;}
+</style>
+</head>
+
+<body>
+<div id="cas">
+	
+</div>
+
+<input id="btn"  type="button" value="游戏开始"/>
+<input id="stp"  type="button" value="游戏暂停"/>
+
+<script>
+
+	var len = 3;
+	var width = 20;
+	var height = 20;
+	var cas = document.getElementById("cas");
+	var btn = document.getElementById("btn");
+	var stp = document.getElementById("stp");
+	
+	var tdArr = dyadic(width,height);//所有TD坐标
+	var snake = new Array();//蛇节点
+	var foot = new Array();
+	var direct = 0;//方向
+	var timer = null;
+	
+	initGrid();
+	initSnake();
+	//游戏开始
+	btn.onclick=function(){
+		
+		timer=setInterval(snakeMove,100);
+	}
+	//游戏暂停
+	stp.onclick=function(){
+		clearInterval(timer)
+	}
+	
+	
+	document.onkeydown = function(e){
+		e = e || event;
+		direct = e.keyCode;	
+	}
+	
+	//游戏结束判断
+	function over(){
+		for(var i=1;i<snake.length;i++){
+			if((startX == snake[i][0] && startY == snake[i][1])||startX>width || startX<0 || startY>height || startY<0){
+				alert("Gameover")
+				clearInterval(timer);
+				return false;
+			}
+		}
+		
+	}
+	
+	//坐标重叠判断
+	function cover(m,n){
+		var buf=true
+		for(var i=0;i<snake.length;i++){
+			if(m == snake[i][0] && n == snake[i][1]){
+				buf=false;
+			}
+		}
+		return buf;		
+	}
+	
+	//创建食物
+	function createFoot(){
+		footX = ranNum(0,20);
+		footY = ranNum(0,20);
+		while(!cover(footX,footY)){
+			footX = ranNum(0,20);
+			footY = ranNum(0,20);
+		}
+		foot.push([footX,footY]);
+		tdArr[footX][footY].className ="foot";
+	}
+	
+	//吃食物
+	function eatFoot(){
+		len+=1;
+		snake.push([endX,endY]);
+		for(var i=0;i<len;i++){
+			tdArr[snake[i][0]][snake[i][1]].className="on"
+		}
+	}
+	
+	//方向值的判断获取
+	function judgeDirect(){
+		switch(direct){
+			case 37:return startX-=1;break;
+			case 38:return startY-=1;break;
+			case 39:return startX+=1;break;
+			case 40:return startY+=1;break;
+			case 0 :return startX+=1;break;
+		}
+	}
+	
+	//蛇坐标改变
+	function snakeCoor(){
+		endX=snake[len-1][0];
+		endY=snake[len-1][1];
+		snake.pop();
+		judgeDirect();
+		snake.unshift([startX,startY])
+	}
+	
+	//蛇移动
+	function snakeMove(){
+		snakeCoor();
+		over();
+			
+		if(snake[0][0] == footX && snake[0][1] == footY){
+			eatFoot();
+			createFoot();
+		}
+		else{
+			for(var i=0;i<len;i++){
+				tdArr[snake[i][0]][snake[i][1]].className="on"
+			}
+			tdArr[endX][endY].className="";
+		}
+		
+	}
+	
+	//创建蛇
+	function initSnake(){
+		startX = ranNum(3,10);
+		startY = ranNum(0,20);
+		for(var i=0;i<len;i++){
+			tdArr[startX-i][startY].className="on";
+			snake.push([startX-i,startY]);
+		}
+		createFoot();	
+	}
+	
+	//创建网格
+	function initGrid(){
+		var table = document.createElement("table");
+		var tbody = document.createElement("tbody");
+		for(var i=0 ; i<height ; i++){
+			tr = document.createElement("tr");
+			for(var j=0 ; j<width ; j++){
+				td = document.createElement("td");
+				tdArr[j][i]=td;
+				tr.appendChild(td);
+			}
+			tbody.appendChild(tr);
+		}
+		table.appendChild(tbody);
+		cas.appendChild(table);
+	}
+	
+	//创建二维数组
+	function dyadic(m,n){
+		var arr = new Array(n);
+		for(var i=0;i<n;i++){
+			arr[i]=new Array(m);
+		}
+		return arr;
+	}
+	
+	//产生随机数
+	function ranNum(m,n){
+		return parseInt(Math.random()*(n-m)+m);
+	}
+	
+</script>
+</body>
+</html>

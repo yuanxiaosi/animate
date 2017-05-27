@@ -1,0 +1,125 @@
+<!DOCTYPE html>  
+<html>  
+ 
+<style>
+  body { margin: 0; }
+  canvas { width: 100%; height: 100% }
+</style>
+<body>  
+  
+    <div id="container"></div>
+
+
+    <script src="./jquery.js"></script>
+    <script src="./three.js"></script>
+    <script src="./Detector.js"></script>
+    <script>
+    // 禁用鼠标选中DOM元素
+    document.onselectstart = function() {
+      return false;
+    }; 
+
+
+
+    // 设置场景大小
+    var WIDTH = 800,
+      HEIGHT = 800;
+    // 设置一些相机参数
+    var VIEW_ANGLE = 45,
+      ASPECT = WIDTH / HEIGHT,
+      NEAR = 0.1,
+      FAR = 10000;
+    // 获取DOM结构中的元素
+    // - 假设我们使用了JQuery
+    var $container = $('#container');
+    // 创建渲染器、相机和场景
+    var renderer = new THREE.WebGLRenderer();
+    var camera =
+      new THREE.PerspectiveCamera(
+        VIEW_ANGLE,
+        ASPECT,
+        NEAR,
+        FAR);
+    var scene = new THREE.Scene();
+    // 将相机加入场景
+    scene.add(camera);
+    // 相机的初始位置为原点
+    // 将相机拉回来一些（译者注：这样才能看到原点）
+    camera.position.z = 300;
+    // 启动渲染器
+    renderer.setSize(WIDTH, HEIGHT);
+    // 将渲染器加到DOM结构中
+    $container.append(renderer.domElement);
+
+
+
+    var urls = [
+          'https://aerotwist.com/static/tutorials/create-your-own-environment-maps/demo/canary/pos-x.png',
+          'https://aerotwist.com/static/tutorials/create-your-own-environment-maps/demo/canary/neg-x.png',
+          'https://aerotwist.com/static/tutorials/create-your-own-environment-maps/demo/canary/pos-y.png',
+          'https://aerotwist.com/static/tutorials/create-your-own-environment-maps/demo/canary/neg-y.png',
+          'https://aerotwist.com/static/tutorials/create-your-own-environment-maps/demo/canary/pos-z.png',
+          'https://aerotwist.com/static/tutorials/create-your-own-environment-maps/demo/canary/neg-z.png'
+        ];
+
+    // wrap it up into the object that we need
+    var cubemap = THREE.ImageUtils.loadTextureCube(urls);
+
+    // set the format, likely RGB
+    // unless you've gone crazy
+    cubemap.format = THREE.RGBFormat;
+
+    // following code from https://github.com/mrdoob/three.js/blob/master/examples/webgl_materials_cubemap.html
+    var shader = THREE.ShaderLib[ "cube" ];
+    shader.uniforms[ "tCube" ].texture = cubemap;
+
+    var material = new THREE.ShaderMaterial( {
+
+      fragmentShader: shader.fragmentShader,
+      vertexShader: shader.vertexShader,
+      uniforms: shader.uniforms,
+      depthWrite: false,
+      side: THREE.BackSide
+
+    });
+
+    var skybox = new THREE.Mesh( new THREE.CubeGeometry( 1000, 1000, 1000 ), material );
+
+    var ambient = new THREE.AmbientLight( 0xffffff );
+    scene.add(ambient);
+
+    var pointLight = new THREE.PointLight( 0xffffff, 2 );
+    scene.add( pointLight );
+
+    var reflectionMaterial = new THREE.MeshBasicMaterial({
+      color: 0xcccccc,
+      envMap: cubemap
+    });
+
+    var torus = new THREE.Mesh(
+      new THREE.TorusKnotGeometry(60,20,100),
+      reflectionMaterial
+    );
+
+    scene.add(torus);
+    scene.add(camera);
+    scene.add(skybox);
+
+    var time = 0;
+    var ORIGIN = new THREE.Vector3();
+    var render = function () {
+      requestAnimationFrame( render );
+
+      time += 0.005;
+
+      camera.position.x = Math.sin(time) * 400;
+      camera.position.z = Math.cos(time) * 400;
+      camera.lookAt(ORIGIN);
+
+      renderer.render(scene,camera);
+    };
+
+    render();
+    </script>
+</body>  
+</html>  

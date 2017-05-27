@@ -1,0 +1,335 @@
+<!DOCTYPE html>  
+<html>  
+ 
+<style>
+  body { margin: 0; }
+  }
+</style>
+<body>  
+  
+    <div id="WebGL"></div>
+
+    <script src="./js/jquery.js"></script>
+    <script src="./js/three.js"></script>
+    <script src="./js/PointerLockControls.js"></script>
+    <script src="./js/Detector.js"></script>
+    
+    <script type="text/javascript">
+      $( function () {
+          // 场景
+          var scene = new THREE.Scene();
+   
+          var aspect = window.innerWidth / window.innerHeight;
+          /**
+           * 定义一个透视镜头，参数：
+           * fov FOV垂直分量，镜头到视截锥近平面上下边之间的夹角
+           * aspect 视截锥的纵横比
+           * near 近平面离镜头多远
+           * far 远平面离镜头多远
+           */
+          var camera = new THREE.PerspectiveCamera( 45, aspect, 0.1, 1000 );
+   
+          // WebGL渲染器，使用显卡来渲染场景。尽管还存在其它渲染器实现，但是处于性能、特性的考虑，不推荐使用
+          var renderer = new THREE.WebGLRenderer();
+          // 设置背景色，第二参数为透明度
+          renderer.setClearColor( 0xEEEEEE, 1 );
+          // 设置场景的大小
+          renderer.setSize( window.innerWidth, window.innerHeight );
+   
+          // 创建一个调试用途的坐标轴，X轴红色、Y轴绿色、Z轴蓝色。20表示轴线长度
+          var axes = new THREE.AxisHelper( 20 );
+          // 把对象添加到场景中
+          scene.add( axes );
+   
+
+
+   
+
+
+          var UNITWIDTH = 1; // Width of a cubes in the maze
+          var UNITHEIGHT = 1; // Height of the cubes in the maze
+          var totalCubesWide; // How many cubes wide the maze will be
+          var collidableObjects = []; // An array of collidable objects used later
+
+          function createMazeCubes() {
+            // Maze wall mapping, assuming even square
+            // 1's are cubes, 0's are empty space
+            // 
+            
+            var map = [];
+            var l = 8;
+            var w = 500;
+            var h = 500;
+            var m = w/2;
+
+            for(var i=0; i<w; i++){
+              var newArr = [];
+              for(var j=0; j<h; j++){
+                newArr.push(0)
+              }
+              map.push(newArr)
+            }
+            
+
+            /*var mid = w/2;
+            for(var i=1; i<4, i++){
+              map[mid][mid] = 0;
+              map[mid][mid-i] = 0;
+              map[mid-i][mid] = 0;
+              map[mid-i][mid-i] = 0;
+            }*/
+
+            for(var i=0; i<1000; i++){
+              map[m][m-i] = 0
+              map[m-1][m-i] = 0
+              map[m-2][m-i] = 0
+              map[m-3][m-i] = 0
+              map[m-4][m-i] = 0
+              map[m+1][m-i] = 0
+              map[m+2][m-i] = 0
+              map[m+3][m-i] = 0
+            }
+
+            
+            
+            
+
+
+
+            /*var map = [
+              [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+              [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+              [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+              [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+              [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+              [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+              [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+              [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+              [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+              [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+              [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+              [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+              [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+              [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+              [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+              [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+              [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+              [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+              [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ],
+              [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ]
+            ];*/
+            /*var map = [
+              [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, ],
+              [1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 1, ],
+              [1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, ],
+              [1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, ],
+              [1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, ],
+              [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, ],
+              [1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, ],
+              [1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, ],
+              [1, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, ],
+              [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, ],
+              [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 1, 0, 1, ],
+              [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 1, 0, 1, ],
+              [1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 0, 1, 0, 0, 1, 1, 1, ],
+              [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, ],
+              [1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 1, 1, 0, 1, 0, 0, 0, 0, 1, ],
+              [1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 0, 1, 1, 0, 1, 0, 0, 0, 0, 1, ],
+              [1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, ],
+              [1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, ],
+              [1, 0, 1, 0, 1, 1, 1, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, ],
+              [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, ],
+              [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, ],
+              [1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 1, ],
+              [1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, ],
+              [1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, ],
+              [1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, ],
+              [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, ],
+              [1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, ],
+              [1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, ],
+              [1, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, ],
+              [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, ],
+              [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 1, 0, 1, ],
+              [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 1, 0, 1, ],
+              [1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 0, 1, 0, 0, 1, 1, 1, ],
+              [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, ],
+              [1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 1, 1, 0, 1, 0, 0, 0, 0, 1, ],
+              [1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 0, 1, 1, 0, 1, 0, 0, 0, 0, 1, ],
+              [1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, ],
+              [1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, ],
+              [1, 0, 1, 0, 1, 1, 1, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, ],
+              [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, ]
+            ];
+*/
+            // wall details
+            var cubeGeo = new THREE.BoxGeometry(UNITWIDTH, UNITHEIGHT, UNITWIDTH);
+            var cubeMat = new THREE.MeshPhongMaterial({
+              color: 0x81cfe0,
+            });
+
+            // Keep cubes within boundry walls
+            var widthOffset = UNITWIDTH / 2;
+            // Put the bottom of the cube at y = 0
+            var heightOffset = UNITHEIGHT / 2;
+
+            // See how wide the map is by seeing how long the first array is
+            totalCubesWide = map[0].length;
+
+            // Place walls where 1`s are
+            for (var i = 0; i < totalCubesWide; i++) {
+              for (var j = 0; j < map[i].length; j++) {
+                // If a 1 is found, add a cube at the corresponding position
+                if (map[i][j]) {
+                  // Make the cube
+                  var cube = new THREE.Mesh(cubeGeo, cubeMat);
+                  // Set the cube position
+                  cube.position.z = (i - totalCubesWide / 2) * UNITWIDTH + widthOffset;
+                  cube.position.y = 0;
+                  cube.position.x = (j - totalCubesWide / 2) * UNITWIDTH + widthOffset;
+                  // Add the cube
+                  scene.add(cube);
+                  // Used later for collision detection
+                  collidableObjects.push(cube);
+                }
+              }
+            }
+              // The size of the maze will be how many cubes wide the array is * the width of a cube
+              mapSize = totalCubesWide * UNITWIDTH;
+          }
+          createMazeCubes();
+
+
+
+
+
+          var material = new THREE.MeshLambertMaterial( { color : 0x00cc00 } );
+
+          var geometry = new THREE.Geometry();
+          geometry.vertices.push( new THREE.Vector3( -50, -50, 0 ) );
+          geometry.vertices.push( new THREE.Vector3(  50, -50, 0 ) );
+          geometry.vertices.push( new THREE.Vector3(  50,  50, 0 ) );
+          var face = new THREE.Face3( 0, 1, 2 );
+          geometry.faces.push( face );
+          geometry.computeFaceNormals();
+          var triangle = new THREE.Mesh( geometry, material )
+          triangle.position.set(1,1,1)
+
+          scene.add( triangle );
+
+
+
+
+
+
+   
+          // 加入控制的cube
+          var cubeGeometry = new THREE.CubeGeometry(2, 2, 2);
+          var wireMaterial = new THREE.MeshBasicMaterial({
+              color: 0x00ff00,
+              wireframe: true
+          });
+
+
+          movingCube = new THREE.Mesh(cubeGeometry, wireMaterial);
+          movingCube.position.set(0, 0, 0);
+          //scene.add(movingCube);
+
+
+          var crash = false;
+          function detectPlayerCollision() {
+            
+            var originPoint = movingCube.position.clone();
+            for (var vertexIndex = 0; vertexIndex < movingCube.geometry.vertices.length; vertexIndex++) {
+                // 顶点原始坐标
+                var localVertex = movingCube.geometry.vertices[vertexIndex].clone();
+                // 顶点经过变换后的坐标
+                var globalVertex = localVertex.applyMatrix4(movingCube.matrix);
+                var directionVector = globalVertex.sub(movingCube.position);
+                var ray = new THREE.Raycaster(originPoint, directionVector.clone().normalize());
+
+                var collisionResults = ray.intersectObjects(collidableObjects, false);
+                /*if(collisionResults.length > 0){
+                  console.log(directionVector.length())
+                  console.log(collisionResults[0].distance)
+                }*/
+                if (collisionResults.length > 0 && collisionResults[0].distance < directionVector.length()) {
+                    crash = true;
+                    crashId = collisionResults[0].object.name;
+                    break;
+                }
+                crash = false;
+            }
+   
+            return crash;
+          }
+
+
+
+
+
+
+
+          // 移动镜头
+          camera.position.x = 0;
+          camera.position.y = 100;
+          camera.position.z = 0;
+          // 将镜头指向场景的中心
+          camera.lookAt( scene.position );
+          
+          var now = 38;
+
+          // 渲染
+          $( "#WebGL" ).append( renderer.domElement );
+          renderer.render( scene, camera );
+
+
+          var speed = -1;
+          var speedX = speed;
+          var speedZ = 0;
+
+          var action = function () {
+            
+            console.log(speedZ)
+            movingCube.position.x += speedX;
+            camera.position.x += speedX;
+            movingCube.position.z += speedZ;
+            camera.position.z += speedZ;
+
+            if(detectPlayerCollision()){
+              return;
+            }
+
+            renderer.render(scene, camera);
+            requestAnimationFrame( action );
+
+          };
+          //action();
+
+
+          $("body").keydown(function(e){
+            
+            switch(e.keyCode){
+              case 37:
+                speedX = -Math.abs(speed);
+                speedZ = 0;
+                break;
+              case 38:
+                speedX = 0;
+                speedZ = -Math.abs(speed);
+                break;
+              case 39:
+                speedX = Math.abs(speed);
+                speedZ = 0;
+                break;
+              case 40: 
+                speedX = 0;
+                speedZ = Math.abs(speed);
+                break;
+            }
+          });
+      } );
+  </script>
+
+
+</body>  
+</html>  
